@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="myaurora"
+  id="myeclipse.1433321467574"
+  context-root="/myaurora"
+  j2ee-spec="6.0"
+  archive="myaurora.war">
+  <attributes>
+    <attribute name="webrootdir" value="webRoot" />
+  </attributes>
+</project-module>
+

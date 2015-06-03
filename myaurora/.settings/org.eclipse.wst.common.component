@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="myaurora">
+        <wb-resource deploy-path="/" source-path="/webRoot"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <property name="context-root" value="/myaurora"/>
+        <property name="java-output-path" value="/myaurora/webRoot/WEB-INF/classes"/>
+    </wb-module>
+</project-modules>
