@@ -5,6 +5,7 @@ package aurora.service.http;
 
 import java.io.File;
 
+import javax.activation.DataSource;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -55,7 +56,7 @@ public class WebContextInit implements ServletContextListener {
 
         IObjectRegistry os = uncertainEngine.getObjectRegistry();
         os.registerInstance(ServletContext.class, servletContext);
-
+        
         //uncertainEngine.scanConfigFiles(pattern);
         uncertainEngine.startup();
         
