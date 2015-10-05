@@ -10,5 +10,10 @@
 	<classpathentry kind="lib" path="/AuroraDependency/Library/xapool.jar"/>
 	<classpathentry kind="lib" path="/AuroraDependency/Library/servlet-api.jar"/>
 	<classpathentry kind="lib" path="/AuroraDependency/Library/ojdbc14.jar"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/druid-0.2.7.jar"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/freemarker-2.3.18.jar"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/mysql-connector-java-5.1.12-bin.jar"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/rhino1_7R4.jar"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/sqlserverjdbc.jar"/>
 	<classpathentry kind="output" path=""/>
 </classpath>
