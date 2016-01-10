@@ -22,19 +22,20 @@
 	<classpathentry kind="lib" path="dependency/batik-transcoder.jar"/>
 	<classpathentry kind="lib" path="dependency/batik-util.jar"/>
 	<classpathentry kind="lib" path="dependency/batik-xml.jar"/>
-	<classpathentry kind="lib" path="dependency/js.jar"/>
-	<classpathentry kind="lib" path="dependency/pdf-transcoder.jar"/>
 	<classpathentry kind="lib" path="dependency/xalan-2.6.0.jar"/>
 	<classpathentry kind="lib" path="dependency/xerces_2_5_0.jar"/>
 	<classpathentry kind="lib" path="dependency/xml-apis.jar"/>
 	<classpathentry kind="lib" path="dependency/xml-apis-ext.jar"/>
-	<classpathentry kind="lib" path="D:/WorkDevSpace/Tomcat-5.5.33/common/lib/servlet-api.jar"/>
 	<classpathentry kind="lib" path="dependency/sapjco.jar"/>
 	<classpathentry kind="lib" path="dependency/sapidoc.jar"/>
 	<classpathentry kind="lib" path="dependency/sapidocjco.jar"/>
 	<classpathentry kind="lib" path="dependency/sapidoc3.jar"/>
 	<classpathentry kind="lib" path="dependency/sapjco3.jar"/>
-	<classpathentry kind="lib" path="dependency/poi-3.6-20091214.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.5.0_09"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/poi-3.7-20101029.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/servlet-api.jar"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/poi-ooxml-3.7-20101029.jar"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/poi-ooxml-schemas-3.7-20101029.jar"/>
+	<classpathentry kind="lib" path="/AuroraDependency/Library/c3p0-0.9.1.2.jar"/>
 	<classpathentry kind="output" path=""/>
 </classpath>
