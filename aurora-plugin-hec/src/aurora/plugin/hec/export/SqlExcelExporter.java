@@ -21,7 +21,8 @@ public class SqlExcelExporter implements IExporter {
 	SXSSFWorkbook wb;
 
 	@Override
-	public Workbook doExport(Object dataSet, List<String> promptList) throws SQLException {
+	public Workbook doExport(Object dataSet, List<String> promptList)
+			throws SQLException {
 		SXSSFWorkbook wb = new SXSSFWorkbook(100);
 		Sheet sh = wb.createSheet();
 		Map<String, CellStyle> styles = createStyles(wb);
@@ -69,14 +70,16 @@ public class SqlExcelExporter implements IExporter {
 		style = createBorderedStyle(wb);
 		style.setAlignment(CellStyle.ALIGN_CENTER);
 		style.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
-		style.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
+		style.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE
+				.getIndex());
 		style.setFillPattern(CellStyle.SOLID_FOREGROUND);
 		style.setFont(headerFont);
 		styles.put("header", style);
 
 		style = createBorderedStyle(wb);
 		style.setAlignment(CellStyle.ALIGN_CENTER);
-		style.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
+		style.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE
+				.getIndex());
 		style.setFillPattern(CellStyle.SOLID_FOREGROUND);
 		style.setFont(headerFont);
 		style.setDataFormat(df.getFormat("d-mmm"));
