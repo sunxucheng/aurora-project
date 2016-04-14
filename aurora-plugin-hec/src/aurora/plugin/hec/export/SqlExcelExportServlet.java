@@ -46,16 +46,18 @@ public class SqlExcelExportServlet extends HttpServlet {
 		try {
 			String sqlCode = req.getParameter("sql_code");
 			conn = getConnection(req);
-			sqlStmt = conn.prepareStatement(
-					"select sql_text,export_file_name from hec_excel_exporter_config c where c.sql_code = ?");
+			sqlStmt = conn
+					.prepareStatement("select sql_text,export_file_name from hec_excel_exporter_config c where c.sql_code = ?");
 			sqlStmt.setString(1, sqlCode);
 			sqlRs = sqlStmt.executeQuery();
 			sqlRs.next();
 			String querySql = sqlRs.getString(1);
-			String exportFileName = sqlRs.getString(2) + "_"
-					+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + ".xlsx";
-			promptStmt = conn.prepareStatement(
-					"select column_prompt from hec_excel_exporter_prompts p where p.sql_code = ? order by p.column_sequence");
+			String exportFileName = sqlRs.getString(2)
+					+ "_"
+					+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+							.format(new Date()) + ".xlsx";
+			promptStmt = conn
+					.prepareStatement("select column_prompt from hec_excel_exporter_prompts p where p.sql_code = ? order by p.column_sequence");
 			promptStmt.setString(1, sqlCode);
 			promptRs = promptStmt.executeQuery();
 			List<String> promptList = new ArrayList<String>();
@@ -63,8 +65,8 @@ public class SqlExcelExportServlet extends HttpServlet {
 				String prompt = promptRs.getString(1);
 				promptList.add(prompt);
 			}
-			paramStmt = conn.prepareStatement(
-					"select param_name from hec_excel_exporter_params p where p.sql_code = ? order by p.param_sequence");
+			paramStmt = conn
+					.prepareStatement("select param_name from hec_excel_exporter_params p where p.sql_code = ? order by p.param_sequence");
 			paramStmt.setString(1, sqlCode);
 			paramRs = paramStmt.executeQuery();
 			paramList = new ArrayList<String>();
@@ -74,7 +76,8 @@ public class SqlExcelExportServlet extends HttpServlet {
 			resultStmt = conn.prepareStatement(querySql);
 			if (paramList != null) {
 				for (int paramIndex = 0; paramIndex < paramList.size(); paramIndex++) {
-					String paramValue = req.getParameter(paramList.get(paramIndex));
+					String paramValue = req.getParameter(paramList
+							.get(paramIndex));
 					resultStmt.setString(paramIndex + 1, paramValue);
 				}
 			}
@@ -91,7 +94,8 @@ public class SqlExcelExportServlet extends HttpServlet {
 				IExporter exporter = new SqlExcelExporter();
 				Workbook wb = exporter.doExport(resultRs, promptList);
 				resp.setContentType("application/vnd.ms-excel");
-				resp.setHeader("Content-Disposition", "attachment;" + processFileName(req, exportFileName));
+				resp.setHeader("Content-Disposition", "attachment;"
+						+ processFileName(req, exportFileName));
 				resp.setHeader("cache-control", "must-revalidate");
 				resp.setHeader("pragma", "public");
 				OutputStream ops = resp.getOutputStream();
@@ -112,13 +116,141 @@ public class SqlExcelExportServlet extends HttpServlet {
 			DBUtil.closeStatement(resultStmt);
 			DBUtil.closeConnection(conn);
 		}
- 
+
+	}
+
+	protected void doServiceWhereClause(HttpServletRequest req,
+			HttpServletResponse resp) throws ServletException, IOException,
+			SQLException {
+		Connection conn = null;
+		PreparedStatement sqlStmt = null;
+		PreparedStatement promptStmt = null;
+		PreparedStatement paramStmt = null;
+		PreparedStatement resultStmt = null;
+		ResultSet sqlRs = null;
+		ResultSet promptRs = null;
+		ResultSet paramRs = null;
+		ResultSet resultRs = null;
+		List<String[]> paramList = null;
+		String selectClm = null;
+		String whereClause = null;
+		try {
+			String sqlCode = req.getParameter("sql_code");
+			conn = getConnection(req);
+			sqlStmt = conn
+					.prepareStatement("select sql_text,export_file_name from hec_excel_exporter_config c where c.sql_code = ?");
+			sqlStmt.setString(1, sqlCode);
+			sqlRs = sqlStmt.executeQuery();
+			sqlRs.next();
+			String querySql = sqlRs.getString(1);
+			String exportFileName = sqlRs.getString(2)
+					+ "_"
+					+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+							.format(new Date()) + ".xlsx";
+			promptStmt = conn
+					.prepareStatement("select column_prompt,column_name from hec_excel_exporter_prompts p where p.sql_code = ? order by p.column_sequence");
+			promptStmt.setString(1, sqlCode);
+			promptRs = promptStmt.executeQuery();
+			List<String> promptList = new ArrayList<String>();
+			selectClm = "select ";
+			while (promptRs.next()) {
+				String prompt = promptRs.getString(1);
+				if (promptRs.isLast()) {
+					selectClm += promptRs.getString(2) + "(";
+				} else {
+					selectClm += promptRs.getString(2) + ",";
+				}
+				promptList.add(prompt);
+			}
+			paramStmt = conn
+					.prepareStatement("select param_name,query_op,query_exp from hec_excel_exporter_params p where p.sql_code = ? order by p.param_sequence");
+			paramStmt.setString(1, sqlCode);
+			paramRs = paramStmt.executeQuery();
+			paramList = new ArrayList<String[]>();
+			while (paramRs.next()) {
+				String[] paraRs = { paramRs.getString(1), paramRs.getString(2),
+						paramRs.getString(3) };
+				paramList.add(paraRs);
+			}
+			if (paramList != null) {
+				whereClause = ") where ";
+				for (int paramIndex = 0; paramIndex < paramList.size(); paramIndex++) {
+					String paraName = paramList.get(paramIndex)[0];
+					String paraOp = paramList.get(paramIndex)[1];
+					String paraExp = paramList.get(paramIndex)[2];
+					String paramValue = req.getParameter(paraName);
+					if (!paramValue.isEmpty()) {
+						if (!paraOp.isEmpty()) {
+							if (paramIndex == paramList.size() - 1) {
+								whereClause += " " + paraName + " " + paraOp
+										+ " '" + paramValue + "' and ";
+							} else {
+								whereClause += " " + paraName + " " + paraOp
+										+ " '" + paramValue + "' ";
+							}
+						} else if (!paraExp.isEmpty()) {
+							if (paramIndex == paramList.size() - 1) {
+								whereClause += " "
+										+ paraExp.replaceAll("${@" + paraName
+												+ "}", paramValue) + " and";
+							} else {
+								whereClause += " "
+										+ paraExp.replaceAll("${@" + paraName
+												+ "}", paramValue) + " ";
+							}
+						}
+					}
+				}
+			}
+			querySql = selectClm
+					+ querySql.replaceAll("#WHERE_CLAUSE#", whereClause);
+			resultStmt = conn.prepareStatement(querySql);
+			resultRs = resultStmt.executeQuery();
+			int columnCount = resultStmt.getMetaData().getColumnCount();
+			if (columnCount != promptList.size()) {
+				String errorMsg = "excel导出器中设置的查询结果列数量与表头列数量不匹配，请联系管理员!";
+				resp.setContentLength(errorMsg.getBytes().length);
+				resp.setContentType("text/plain;charset=utf-8");
+				resp.getWriter().append(errorMsg);
+				resp.getWriter().close();
+				return;
+			} else {
+				IExporter exporter = new SqlExcelExporter();
+				Workbook wb = exporter.doExport(resultRs, promptList);
+				resp.setContentType("application/vnd.ms-excel");
+				resp.setHeader("Content-Disposition", "attachment;"
+						+ processFileName(req, exportFileName));
+				// 基于查询的不能使用，查询的结果不是来自sql而是cache
+				// resp.setHeader("cache-control", "must-revalidate");
+				resp.setHeader("cache-control", "max-age=0");
+				resp.setHeader("pragma", "public");
+				OutputStream ops = resp.getOutputStream();
+				wb.write(ops);
+				ops.close();
+				exporter.dispose();
+			}
+		} catch (SQLException sex) {
+			sex.printStackTrace();
+		} finally {
+			DBUtil.closeResultSet(resultRs);
+			DBUtil.closeResultSet(sqlRs);
+			DBUtil.closeResultSet(paramRs);
+			DBUtil.closeResultSet(promptRs);
+			DBUtil.closeStatement(sqlStmt);
+			DBUtil.closeStatement(promptStmt);
+			DBUtil.closeStatement(paramStmt);
+			DBUtil.closeStatement(resultStmt);
+			DBUtil.closeConnection(conn);
+		}
+
 	}
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
 		try {
-			doService(req, resp);
+			// doService(req, resp);
+			doServiceWhereClause(req, resp);
 		} catch (SQLException sex) {
 
 		}
@@ -126,7 +258,8 @@ public class SqlExcelExportServlet extends HttpServlet {
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
 		try {
 			doService(req, resp);
 		} catch (SQLException sex) {
@@ -134,17 +267,20 @@ public class SqlExcelExportServlet extends HttpServlet {
 		}
 	}
 
-	private Connection getConnection(HttpServletRequest req) throws SQLException {
+	private Connection getConnection(HttpServletRequest req)
+			throws SQLException {
 		UncertainEngine engine = (UncertainEngine) req.getServletContext()
 				.getAttribute(UncertainEngine.class.getName());
-		DatabaseServiceFactory databaseFactory = (DatabaseServiceFactory) engine.getObjectRegistry()
-				.getInstanceOfType(DatabaseServiceFactory.class);
+		DatabaseServiceFactory databaseFactory = (DatabaseServiceFactory) engine
+				.getObjectRegistry().getInstanceOfType(
+						DatabaseServiceFactory.class);
 		DataSource ds = databaseFactory.getDataSource();
 		Connection conn = ds.getConnection();
 		return conn;
 	}
 
-	public String processFileName(HttpServletRequest request, String filename) throws UnsupportedEncodingException {
+	public String processFileName(HttpServletRequest request, String filename)
+			throws UnsupportedEncodingException {
 		String userAgent = request.getHeader("User-Agent");
 		String new_filename = URLEncoder.encode(filename, "UTF8");
 		// 如果没有UA，则默认使用IE的方式进行编码，因为毕竟IE还是占多数的
@@ -153,7 +289,9 @@ public class SqlExcelExportServlet extends HttpServlet {
 			userAgent = userAgent.toLowerCase();
 			// IE浏览器，只能采用URLEncoder编码
 			if (userAgent.indexOf("msie") != -1) {
-				rtn = "filename=\"" + new String(filename.getBytes("gb2312"), "iso-8859-1") + "\"";
+				rtn = "filename=\""
+						+ new String(filename.getBytes("gb2312"), "iso-8859-1")
+						+ "\"";
 			}
 			// Opera浏览器只能采用filename*
 			else if (userAgent.indexOf("opera") != -1) {
@@ -166,7 +304,9 @@ public class SqlExcelExportServlet extends HttpServlet {
 			}
 			// Safari浏览器，只能采用ISO编码的中文输出
 			else if (userAgent.indexOf("safari") != -1) {
-				rtn = "filename=\"" + new String(filename.getBytes("UTF-8"), "ISO8859-1") + "\"";
+				rtn = "filename=\""
+						+ new String(filename.getBytes("UTF-8"), "ISO8859-1")
+						+ "\"";
 			}
 			// FireFox浏览器，可以使用MimeUtility或filename*或ISO编码的中文输出
 			else if (userAgent.indexOf("mozilla") != -1) {

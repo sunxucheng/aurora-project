@@ -20,6 +20,10 @@ public class SqlExcelExporter implements IExporter {
 
 	SXSSFWorkbook wb;
 
+	public SqlExcelExporter() {
+		wb = new SXSSFWorkbook();
+	}
+
 	@Override
 	public Workbook doExport(Object dataSet, List<String> promptList)
 			throws SQLException {
