@@ -134,6 +134,7 @@ public class SqlExcelExportServlet extends HttpServlet {
 		List<String[]> paramList = null;
 		String selectClm = null;
 		String whereClause = null;
+		String querySql = null;
 		try {
 			String sqlCode = req.getParameter("sql_code");
 			conn = getConnection(req);
@@ -142,13 +143,16 @@ public class SqlExcelExportServlet extends HttpServlet {
 			sqlStmt.setString(1, sqlCode);
 			sqlRs = sqlStmt.executeQuery();
 			sqlRs.next();
-			String querySql = sqlRs.getString(1);
+			querySql = sqlRs.getString(1);
 			String exportFileName = sqlRs.getString(2)
 					+ "_"
 					+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 							.format(new Date()) + ".xlsx";
 			promptStmt = conn
-					.prepareStatement("select column_prompt,column_name from hec_excel_exporter_prompts p where p.sql_code = ? order by p.column_sequence");
+					.prepareStatement(
+							"select column_prompt,column_name from hec_excel_exporter_prompts p where p.sql_code = ? order by p.column_sequence",
+							ResultSet.TYPE_SCROLL_SENSITIVE,
+							ResultSet.CONCUR_READ_ONLY);
 			promptStmt.setString(1, sqlCode);
 			promptRs = promptStmt.executeQuery();
 			List<String> promptList = new ArrayList<String>();
@@ -156,7 +160,7 @@ public class SqlExcelExportServlet extends HttpServlet {
 			while (promptRs.next()) {
 				String prompt = promptRs.getString(1);
 				if (promptRs.isLast()) {
-					selectClm += promptRs.getString(2) + "(";
+					selectClm += promptRs.getString(2) + " from(";
 				} else {
 					selectClm += promptRs.getString(2) + ",";
 				}
@@ -173,37 +177,38 @@ public class SqlExcelExportServlet extends HttpServlet {
 				paramList.add(paraRs);
 			}
 			if (paramList != null) {
-				whereClause = ") where ";
+				whereClause = ") where 1=1";
 				for (int paramIndex = 0; paramIndex < paramList.size(); paramIndex++) {
 					String paraName = paramList.get(paramIndex)[0];
 					String paraOp = paramList.get(paramIndex)[1];
 					String paraExp = paramList.get(paramIndex)[2];
 					String paramValue = req.getParameter(paraName);
-					if (!paramValue.isEmpty()) {
-						if (!paraOp.isEmpty()) {
+					if (paramValue != null && !paramValue.isEmpty()) {
+						if (paraOp != null && !paraOp.isEmpty()) {
 							if (paramIndex == paramList.size() - 1) {
-								whereClause += " " + paraName + " " + paraOp
-										+ " '" + paramValue + "' and ";
+								whereClause += " and " + paraName + " "
+										+ paraOp + " '" + paramValue + "' ";
 							} else {
-								whereClause += " " + paraName + " " + paraOp
-										+ " '" + paramValue + "' ";
+								whereClause += " and " + paraName + " "
+										+ paraOp + " '" + paramValue + "' ";
 							}
-						} else if (!paraExp.isEmpty()) {
+						} else if (paraExp != null && !paraExp.isEmpty()) {
 							if (paramIndex == paramList.size() - 1) {
-								whereClause += " "
-										+ paraExp.replaceAll("${@" + paraName
-												+ "}", paramValue) + " and";
+								whereClause += " and "
+										+ paraExp.replace("${@" + paraName
+												+ "}", "'" + paramValue + "'");
 							} else {
-								whereClause += " "
-										+ paraExp.replaceAll("${@" + paraName
-												+ "}", paramValue) + " ";
+								whereClause += " and "
+										+ paraExp.replace("${@" + paraName
+												+ "}", "'" + paramValue + "'");
 							}
 						}
 					}
 				}
 			}
 			querySql = selectClm
-					+ querySql.replaceAll("#WHERE_CLAUSE#", whereClause);
+					+ querySql.replace("#WHERE_CLAUSE#", whereClause);
+			System.out.println(querySql);
 			resultStmt = conn.prepareStatement(querySql);
 			resultRs = resultStmt.executeQuery();
 			int columnCount = resultStmt.getMetaData().getColumnCount();
@@ -231,6 +236,12 @@ public class SqlExcelExportServlet extends HttpServlet {
 			}
 		} catch (SQLException sex) {
 			sex.printStackTrace();
+			String errorMsg = sex.getMessage() + querySql;
+			resp.setContentLength(errorMsg.getBytes().length);
+			resp.setContentType("text/plain;charset=utf-8");
+			resp.getWriter().append(errorMsg);
+			resp.getWriter().close();
+			return;
 		} finally {
 			DBUtil.closeResultSet(resultRs);
 			DBUtil.closeResultSet(sqlRs);
@@ -250,6 +261,7 @@ public class SqlExcelExportServlet extends HttpServlet {
 			throws ServletException, IOException {
 		try {
 			// doService(req, resp);
+			// 第二种方式
 			doServiceWhereClause(req, resp);
 		} catch (SQLException sex) {
 
