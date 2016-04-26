@@ -43,6 +43,7 @@ public class SqlExcelExportServlet extends HttpServlet {
 		ResultSet paramRs = null;
 		ResultSet resultRs = null;
 		List<String> paramList = null;
+		String querySql="";
 		try {
 			String sqlCode = req.getParameter("sql_code");
 			conn = getConnection(req);
@@ -51,7 +52,7 @@ public class SqlExcelExportServlet extends HttpServlet {
 			sqlStmt.setString(1, sqlCode);
 			sqlRs = sqlStmt.executeQuery();
 			sqlRs.next();
-			String querySql = sqlRs.getString(1);
+			querySql = sqlRs.getString(1);
 			String exportFileName = sqlRs.getString(2)
 					+ "_"
 					+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -105,6 +106,12 @@ public class SqlExcelExportServlet extends HttpServlet {
 			}
 		} catch (SQLException sex) {
 			sex.printStackTrace();
+			String errorMsg = sex.getMessage() + querySql;
+			resp.setContentLength(errorMsg.getBytes().length);
+			resp.setContentType("text/plain;charset=utf-8");
+			resp.getWriter().append(errorMsg);
+			resp.getWriter().close();
+			return;
 		} finally {
 			DBUtil.closeResultSet(resultRs);
 			DBUtil.closeResultSet(sqlRs);
@@ -208,7 +215,7 @@ public class SqlExcelExportServlet extends HttpServlet {
 			}
 			querySql = selectClm
 					+ querySql.replace("#WHERE_CLAUSE#", whereClause);
-			System.out.println(querySql);
+			// System.out.println(querySql);
 			resultStmt = conn.prepareStatement(querySql);
 			resultRs = resultStmt.executeQuery();
 			int columnCount = resultStmt.getMetaData().getColumnCount();
@@ -260,9 +267,9 @@ public class SqlExcelExportServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		try {
-			// doService(req, resp);
+			doService(req, resp);
 			// 第二种方式
-			doServiceWhereClause(req, resp);
+			// doServiceWhereClause(req, resp);
 		} catch (SQLException sex) {
 
 		}
